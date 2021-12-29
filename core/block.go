@@ -5,29 +5,36 @@ import (
 )
 
 type BlockHeader struct {
-	Height          uint
-	ParentHash      []byte
-	Difficulty      uint
-	Nonce           uint
-	TransactionHash []byte
-	Coinbase        []byte // address of the miner
-	Reward          uint
+	Height          uint   `json:"height"`
+	Hash            []byte `json:"hash"`
+	ParentHash      []byte `json:"parenthash"`
+	Difficulty      uint   `json:"difficulty"`
+	Nonce           string `json:"nonce"`
+	TransactionRoot []byte `json:"transactionroot"`
+	Coinbase        string `json:"coinbase"` // address of the miner
+	Reward          uint   `json:"reward"`
 }
 
 type Block struct {
-	header       BlockHeader
-	transactions []Transaction
+	Header       BlockHeader   `json:"header"`
+	Transactions []Transaction `json:"transactions"`
+}
+
+func CreateBlock(height uint, parentHash []byte, difficulty uint, coinbase string, reward uint) Block {
+	return Block{Header: BlockHeader{Height: height, ParentHash: parentHash, Difficulty: difficulty, Coinbase: coinbase, Reward: reward}}
 }
 
 func (b *Block) String() string {
-	// Calling Sprintf() function
-	s := fmt.Sprintf("this is block %d", b.header.Height)
+	s := fmt.Sprintf("block height is %d", b.Header.Height)
 
-	// Calling WriteString() function to write the
-	// contents of the string "s" to "os.Stdout"
 	return s
 }
 
-func (b *Block) addTransaction(tx Transaction) {
-	b.transactions = append(b.transactions, tx)
+func (b *Block) AddTransaction(s *State, tx Transaction) error {
+	if s.Validate(tx) && len(b.Transactions) < 100 {
+		b.Transactions = append(b.Transactions, tx)
+		return nil
+	} else {
+		return fmt.Errorf("%v doesn't have enough balance to send amount %d", tx.SendFrom, tx.Amount)
+	}
 }
